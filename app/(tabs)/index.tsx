@@ -1,74 +1,107 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
+import { Image, StyleSheet, Platform, Text, KeyboardAvoidingView, View, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { Button } from 'react-native-elements';
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { router } from 'expo-router';
+import Timer from '@/components/TimerScreen';
+import { SetStateAction, useEffect, useState } from 'react';
+import InputField from '@/components/Input';
+import SessionPickerModal from '@/components/ModalSetSeance';
+import CustomButton from '@/components/CustomButton';
+import colors from '@/theme';
+
 
 export default function HomeScreen() {
+  const [durationRepet, setDurationRepet] = useState("");
+  const [repetition, setRepetition] = useState("");
+  const [series, setSeries] = useState("");
+  const [durationSeries, setDurationSeries] = useState("");
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const handleSelectSession = (session: { durationRepet: string; repetition: string; series: string; durationSeries: string }) => {
+    setDurationRepet(session.durationRepet);
+    setRepetition(session.repetition);
+    setSeries(session.series);
+    setDurationSeries(session.durationSeries);
+    setIsModalVisible(false);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <>
+      <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, backgroundColor: '#fff', }}>
+
+          <ThemedView style={styles.titleContainer}>
+            <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#0a7ea4', backgroundColor: '#fff' }}>
+              Bienvenue sur Beatrainee
+            </Text>
+            <InputField label="Nombre de répétiton(s)" placeholder="nombre répétition" onChange={(text => setRepetition(text))} value={repetition} />
+            <Timer duration={durationRepet} onChange={(text) => setDurationRepet(text)} titleModal="d'une répétition" />
+            <InputField label="Nombre de série(s)" placeholder="nombre série" onChange={(text => setSeries(text))} value={series}
+            />
+            <Timer duration={durationSeries} onChange={(text) => setDurationSeries(text)} titleModal="d'une pause" />
+
+            <CustomButton
+              title="Commencer une séance"
+              backgroundColor={colors.pink}
+              onPress={() => {
+                if (!durationRepet || !repetition || !series || !durationSeries) {
+                  alert('Veuillez remplir tous les champs.');
+                  return;
+                } else {
+                  router.push({
+                    pathname: '/explore', // Chemin de la page cible
+                    params: {
+                      durationRepet,
+                      repetition,
+                      series,
+                      durationSeries,
+                    },
+                  });
+                }
+              }}
+            />
+            <View>
+              <CustomButton title="Choisir une séance" onPress={() => setIsModalVisible(true)} />
+              <SessionPickerModal
+                visible={isModalVisible}
+                onClose={() => setIsModalVisible(false)}
+                onSelectSession={handleSelectSession}
+              />
+            </View>
+          </ThemedView>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   titleContainer: {
-    flexDirection: 'row',
+    flex: 1, backgroundColor: '#fff',
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
+    padding: 20,
+    gap: 30,
   },
   stepContainer: {
     gap: 8,
     marginBottom: 8,
   },
   reactLogo: {
-    height: 178,
-    width: 290,
+    height: '100%',
+    width: '100%',
     bottom: 0,
     left: 0,
     position: 'absolute',
+  },
+  buttonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
   },
 });
